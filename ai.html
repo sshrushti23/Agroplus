@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AgroPlus AI</title>
+    <style>
+        body {
+            font-family: 'Segoe UI';
+            background: linear-gradient(to right, #e8f5e9, #c8e6c9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            background: white;
+            padding: 30px;
+            width: 350px;
+            border-radius: 15px;
+            box-shadow: 0px 5px 20px rgba(0,0,0,0.1);
+        }
+
+        h2 {
+            text-align: center;
+            color: green;
+        }
+
+        /* UI change nahi kiya, bas alignment maintain kiya hai */
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 8px 0;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            box-sizing: border-box; /* Yeh zaroori hai taaki padding se width na bade */
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: green;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background: darkgreen;
+        }
+
+        .result {
+            margin-top: 15px;
+            text-align: center;
+            font-weight: bold;
+            color: #2e7d32;
+            min-height: 24px; /* Result aane se pehle jagah khali rahegi */
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+    <h2>🌾 AgroPlus AI</h2>
+
+    <!-- Inputs wahi hain jo aapne banaye the -->
+    <input type="number" id="n" placeholder="Nitrogen (N)">
+    <input type="number" id="p" placeholder="Phosphorus (P)">
+    <input type="number" id="k" placeholder="Potassium (K)">
+    <input type="number" id="temp" placeholder="Temperature (°C)">
+    <input type="number" id="hum" placeholder="Humidity (%)">
+    <input type="number" step="0.1" id="ph" placeholder="pH Value (e.g. 6.5)">
+    <input type="number" id="rain" placeholder="Rainfall (mm)">
+
+    <button onclick="predict()">Get Recommendation</button>
+
+    <div class="result" id="result"></div>
+</div>
+
+<script>
+function predict() {
+    const resultDiv = document.getElementById("result");
+    resultDiv.innerText = "Processing... ⏳"; // User ko pata chale ki kaam ho raha hai
+
+    fetch("http://127.0.0.1:5000/predict", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            N: document.getElementById("n").value,
+            P: document.getElementById("p").value,
+            K: document.getElementById("k").value,
+            temperature: document.getElementById("temp").value,
+            humidity: document.getElementById("hum").value,
+            ph: document.getElementById("ph").value,
+            rainfall: document.getElementById("rain").value
+        })
+    })
+    .then(res => {
+        if (!res.ok) {
+            return res.json().then(err => { throw err; });
+        }
+        return res.json();
+    })
+    .then(data => {
+        if (data.crop) {
+            resultDiv.innerText = "🌱 Recommended Crop: " + data.crop;
+        } else {
+            resultDiv.innerText = "❌ Error: " + (data.error || "Unknown issue");
+        }
+    })
+    .catch(err => {
+        resultDiv.innerText = "❌ Server error (Check Terminal)";
+        console.error("Error Details:", err);
+    });
+}
+</script>
+
+</body>
+</html>
